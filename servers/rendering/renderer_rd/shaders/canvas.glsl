@@ -687,7 +687,22 @@ void main() {
 
 			if (normal_used) {
 				vec3 light_pos = vec3(light_array.data[light_base].position, light_array.data[light_base].height);
-				vec3 pos = light_vertex;
+
+				vec2 texture_size = vec2(textureSize(sampler2D(normal_texture, texture_sampler), 0));
+				vec2 tex_uv_snap = (floor(tex_uv * texture_size.x) / texture_size.x) + (0.5 / texture_size.x);
+
+				vec4 tex_uv_h = vec4(tex_uv_snap, 0.0, 1.0);
+				mat4 inverse_texture_matrix = inverse(mat4(
+						light_array.data[light_base].texture_matrix[0],
+						light_array.data[light_base].texture_matrix[1],
+						vec4(0.0, 0.0, 1.0, 0.0),
+						vec4(0.0, 0.0, 0.0, 1.0)));
+
+				vec4 vertex_h = tex_uv_h * inverse_texture_matrix;
+				vec2 vertex_snap = vertex_h.xy / vertex_h.w;
+				shadow_vertex = vertex_snap;
+				vec3 pos = vec3(vertex_snap, 0.0);
+
 				vec3 light_vec = normalize(light_pos - pos);
 
 				light_color.rgb = light_normal_compute(light_vec, normal, base_color.rgb, light_color.rgb, specular_shininess, specular_shininess_used);
